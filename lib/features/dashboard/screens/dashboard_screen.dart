@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kap/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/database_service.dart';
 import '../widgets/add_product_bottom_sheet.dart';
 import '../widgets/product_list_item.dart';
@@ -1044,9 +1045,24 @@ class _PaidListViewState extends State<PaidListView> {
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
 
+  String _getInitials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.isEmpty || parts[0].isEmpty) return '';
+    if (parts.length == 1) {
+      return parts[0].substring(0, parts[0].length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '${parts[0][0]}${parts[parts.length - 1][0]}'.toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final authService = context.watch<AuthService>();
+    final user = authService.currentUser;
+    final String userEmail = user?.email ?? '';
+    final String userName = user?.userMetadata?['name'] as String? ?? 'Kullanıcı';
+    final String userInitials = _getInitials(userName);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1077,9 +1093,9 @@ class SettingsView extends StatelessWidget {
                     CircleAvatar(
                       radius: 28,
                       backgroundColor: KapColors.primaryAccent.withValues(alpha: 0.1),
-                      child: const Text(
-                        'YK',
-                        style: TextStyle(
+                      child: Text(
+                        userInitials.isNotEmpty ? userInitials : 'U',
+                        style: const TextStyle(
                           color: KapColors.primaryAccent,
                           fontWeight: FontWeight.w800,
                           fontSize: 18,
@@ -1091,9 +1107,9 @@ class SettingsView extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Yiğit Kaya',
-                            style: TextStyle(
+                          Text(
+                            userName,
+                            style: const TextStyle(
                               color: KapColors.slateDark,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -1101,7 +1117,7 @@ class SettingsView extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'yigit@example.com',
+                            userEmail,
                             style: TextStyle(
                               color: Colors.grey.shade500,
                               fontSize: 13,
@@ -1148,6 +1164,19 @@ class SettingsView extends StatelessWidget {
                   iconBgColor: Colors.orange.shade600,
                   title: 'Destek',
                   onTap: () {},
+                ),
+              ]),
+              const SizedBox(height: 20),
+              // Settings Group 4 (Oturum)
+              _buildGroupTitle('Oturum'),
+              _buildSettingsCard([
+                _buildSettingsItem(
+                  icon: Icons.logout,
+                  iconBgColor: KapColors.mutedRed,
+                  title: l10n.signOut,
+                  onTap: () {
+                    authService.signOut();
+                  },
                 ),
               ]),
               const SizedBox(height: 24),

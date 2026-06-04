@@ -32,5 +32,22 @@
   "addMember": "Üye Ekle",
   "memberName": "Üye Adı",
   "memberNameRequired": "Üye adı zorunludur",
-  "enterMemberName": "Üye adını girin"
+  "enterMemberName": "Üye adını girin",
+  "login": "Giriş Yap",
+  "register": "Kayıt Ol",
+  "email": "E-posta",
+  "password": "Şifre",
+  "name": "İsim",
+  "signOut": "Çıkış Yap",
+  "emailRequired": "E-posta zorunludur",
+  "passwordRequired": "Şifre zorunludur",
+  "nameRequired": "İsim zorunludur",
+  "invalidEmail": "Geçersiz e-posta adresi",
+  "passwordTooShort": "Şifre en az 6 karakter olmalıdır",
+  "loginSuccess": "Giriş başarılı",
+  "registerSuccess": "Kayıt başarılı",
+  "loginError": "Giriş yapılırken bir hata oluştu",
+  "registerError": "Kayıt olunurken bir hata oluştu",
+  "dontHaveAccount": "Hesabınız yok mu? Kayıt olun",
+  "alreadyHaveAccount": "Zaten hesabınız var mı? Giriş yapın"
 }

@@ -6,8 +6,11 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/constants/colors.dart';
+import 'core/services/auth_service.dart';
 import 'core/services/database_service.dart';
+import 'core/services/supabase_auth_impl.dart';
 import 'core/services/supabase_database_impl.dart';
+import 'features/auth/screens/login_screen.dart';
 import 'features/dashboard/screens/dashboard_screen.dart';
 
 Future<void> main() async {
@@ -21,8 +24,15 @@ Future<void> main() async {
   );
 
   runApp(
-    Provider<DatabaseService>(
-      create: (_) => SupabaseDatabaseImpl(),
+    MultiProvider(
+      providers: [
+        Provider<AuthService>(
+          create: (_) => SupabaseAuthImpl(),
+        ),
+        Provider<DatabaseService>(
+          create: (_) => SupabaseDatabaseImpl(),
+        ),
+      ],
       child: const MyApp(),
     ),
   );
@@ -51,7 +61,25 @@ class MyApp extends StatelessWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('tr'), // Default locale set to Turkish for branding
-      home: const DashboardScreen(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authService = context.watch<AuthService>();
+    return StreamBuilder<AuthState>(
+      stream: authService.onAuthStateChange,
+      builder: (context, snapshot) {
+        if (authService.currentUser != null) {
+          return const DashboardScreen();
+        }
+        return const LoginScreen();
+      },
     );
   }
 }

@@ -32,5 +32,22 @@
   "addMember": "Add Member",
   "memberName": "Member Name",
   "memberNameRequired": "Member name is required",
-  "enterMemberName": "Enter member name"
+  "enterMemberName": "Enter member name",
+  "login": "Log In",
+  "register": "Sign Up",
+  "email": "Email",
+  "password": "Password",
+  "name": "Name",
+  "signOut": "Sign Out",
+  "emailRequired": "Email is required",
+  "passwordRequired": "Password is required",
+  "nameRequired": "Name is required",
+  "invalidEmail": "Invalid email address",
+  "passwordTooShort": "Password must be at least 6 characters",
+  "loginSuccess": "Login successful",
+  "registerSuccess": "Registration successful",
+  "loginError": "An error occurred during login",
+  "registerError": "An error occurred during registration",
+  "dontHaveAccount": "Don't have an account? Sign Up",
+  "alreadyHaveAccount": "Already have an account? Log In"
 }

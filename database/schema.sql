@@ -33,43 +33,37 @@ ALTER TABLE family_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 
--- 4. RLS Policies (Allow anonymous public access for development)
+-- 4. RLS Policies (Enforce auth.uid() scope, no anonymous public access)
 
 -- family_members policies
-CREATE POLICY "Allow public read family_members" ON family_members
-    FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated read family_members" ON family_members
+    FOR SELECT TO authenticated USING (true);
 
-CREATE POLICY "Allow public insert family_members" ON family_members
-    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow user insert own profile" ON family_members
+    FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Allow public update family_members" ON family_members
-    FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Allow user update own profile" ON family_members
+    FOR UPDATE TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Allow public delete family_members" ON family_members
-    FOR DELETE USING (true);
+CREATE POLICY "Allow user delete own profile" ON family_members
+    FOR DELETE TO authenticated USING (auth.uid() = id);
 
 -- categories policies
-CREATE POLICY "Allow public read categories" ON categories
-    FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated read categories" ON categories
+    FOR SELECT TO authenticated USING (true);
 
-CREATE POLICY "Allow public insert categories" ON categories
-    FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Allow public update categories" ON categories
-    FOR UPDATE USING (true) WITH CHECK (true);
-
-CREATE POLICY "Allow public delete categories" ON categories
-    FOR DELETE USING (true);
+CREATE POLICY "Allow authenticated insert categories" ON categories
+    FOR INSERT TO authenticated WITH CHECK (true);
 
 -- products policies
-CREATE POLICY "Allow public read products" ON products
-    FOR SELECT USING (true);
+CREATE POLICY "Allow user read own products" ON products
+    FOR SELECT TO authenticated USING (auth.uid() = created_by);
 
-CREATE POLICY "Allow public insert products" ON products
-    FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow user insert own products" ON products
+    FOR INSERT TO authenticated WITH CHECK (auth.uid() = created_by);
 
-CREATE POLICY "Allow public update products" ON products
-    FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Allow user update own products" ON products
+    FOR UPDATE TO authenticated USING (auth.uid() = created_by) WITH CHECK (auth.uid() = created_by);
 
-CREATE POLICY "Allow public delete products" ON products
-    FOR DELETE USING (true);
+CREATE POLICY "Allow user delete own products" ON products
+    FOR DELETE TO authenticated USING (auth.uid() = created_by);

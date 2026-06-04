@@ -178,6 +178,7 @@ class SupabaseDatabaseImpl implements DatabaseService {
         'quantity': miktar ?? 1.0,
         'unit': birim,
         'is_bought': false,
+        'created_by': _supabase.auth.currentUser?.id,
       });
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl urunEkle Hata: $e');
