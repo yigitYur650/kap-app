@@ -22,7 +22,7 @@ class SupabaseAuthImpl implements AuthService {
       await _supabase.auth.signInWithPassword(
         email: email.trim(),
         password: password,
-      );
+      ).timeout(const Duration(seconds: 15));
     } on supabase.AuthException catch (e, stackTrace) {
       _logException('signInWithEmail', e, stackTrace);
       
@@ -35,6 +35,9 @@ class SupabaseAuthImpl implements AuthService {
       throw UnknownAuthException(e.message, originalError: e, stackTrace: stackTrace);
     } catch (e, stackTrace) {
       _logException('signInWithEmail (Unhandled)', e, stackTrace);
+      if (e is TimeoutException) {
+        throw NetworkException(originalError: e, stackTrace: stackTrace);
+      }
       throw UnknownAuthException('Giriş yapılamadı. Lütfen daha sonra tekrar deneyin.', originalError: e, stackTrace: stackTrace);
     }
   }
@@ -50,7 +53,7 @@ class SupabaseAuthImpl implements AuthService {
         email: email.trim(),
         password: password,
         data: {'name': name.trim()},
-      );
+      ).timeout(const Duration(seconds: 15));
 
       final user = response.user;
       if (user != null) {
@@ -58,7 +61,7 @@ class SupabaseAuthImpl implements AuthService {
         await _supabase.from('family_members').upsert({
           'id': user.id,
           'name': name.trim(),
-        });
+        }).timeout(const Duration(seconds: 10));
       }
     } on supabase.AuthException catch (e, stackTrace) {
       _logException('signUpWithEmail', e, stackTrace);
@@ -74,6 +77,9 @@ class SupabaseAuthImpl implements AuthService {
       throw UnknownAuthException(e.message, originalError: e, stackTrace: stackTrace);
     } catch (e, stackTrace) {
       _logException('signUpWithEmail (Unhandled)', e, stackTrace);
+      if (e is TimeoutException) {
+        throw NetworkException(originalError: e, stackTrace: stackTrace);
+      }
       throw UnknownAuthException('Kayıt olunamadı. Lütfen bilgilerinizi kontrol edip tekrar deneyin.', originalError: e, stackTrace: stackTrace);
     }
   }
@@ -81,7 +87,7 @@ class SupabaseAuthImpl implements AuthService {
   @override
   Future<void> signOut() async {
     try {
-      await _supabase.auth.signOut();
+      await _supabase.auth.signOut().timeout(const Duration(seconds: 10));
     } catch (e, stackTrace) {
       _logException('signOut', e, stackTrace);
       throw UnknownAuthException('Çıkış yapılamadı.', originalError: e, stackTrace: stackTrace);

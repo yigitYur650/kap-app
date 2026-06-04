@@ -19,9 +19,12 @@ Future<void> main() async {
   
   await dotenv.load(fileName: ".env");
 
+  final supabaseUrl = (dotenv.env['SUPABASE_URL'] ?? '').trim().replaceAll('"', '').replaceAll("'", "");
+  final supabaseAnonKey = (dotenv.env['SUPABASE_ANON_KEY'] ?? '').trim().replaceAll('"', '').replaceAll("'", "");
+
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
   runApp(
