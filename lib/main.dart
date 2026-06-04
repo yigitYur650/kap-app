@@ -6,6 +6,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/constants/colors.dart';
+import 'core/providers/locale_provider.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/database_service.dart';
 import 'core/services/supabase_auth_impl.dart';
@@ -26,6 +27,9 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider<LocaleProvider>(
+          create: (_) => LocaleProvider(),
+        ),
         Provider<AuthService>(
           create: (_) => SupabaseAuthImpl(),
         ),
@@ -43,6 +47,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
+
     return ShadApp(
       title: 'KAP',
       debugShowCheckedModeBanner: false,
@@ -60,7 +66,7 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('tr'), // Default locale set to Turkish for branding
+      locale: localeProvider.locale,
       home: const AuthGate(),
     );
   }

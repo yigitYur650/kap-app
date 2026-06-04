@@ -49,5 +49,6 @@
   "loginError": "An error occurred during login",
   "registerError": "An error occurred during registration",
   "dontHaveAccount": "Don't have an account? Sign Up",
-  "alreadyHaveAccount": "Already have an account? Log In"
+  "alreadyHaveAccount": "Already have an account? Log In",
+  "languageTooltip": "Change Language"
 }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:kap/l10n/app_localizations.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -31,47 +32,37 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final authService = context.read<AuthService>();
       final l10n = AppLocalizations.of(context)!;
+      final messenger = ScaffoldMessenger.of(context);
+      final successMsg = _isLogin ? l10n.loginSuccess : l10n.registerSuccess;
+      final defaultErrorMsg = _isLogin ? l10n.loginError : l10n.registerError;
 
       try {
         if (_isLogin) {
           await authService.signInWithEmail(email: email, password: password);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.loginSuccess),
-                backgroundColor: KapColors.slateDark,
-              ),
-            );
-          }
         } else {
           await authService.signUpWithEmail(email: email, password: password, name: name);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.registerSuccess),
-                backgroundColor: KapColors.slateDark,
-              ),
-            );
-          }
         }
+
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(successMsg),
+            backgroundColor: KapColors.slateDark,
+          ),
+        );
       } on AuthException catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.message),
-              backgroundColor: KapColors.mutedRed,
-            ),
-          );
-        }
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: KapColors.mutedRed,
+          ),
+        );
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(_isLogin ? l10n.loginError : l10n.registerError),
-              backgroundColor: KapColors.mutedRed,
-            ),
-          );
-        }
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(defaultErrorMsg),
+            backgroundColor: KapColors.mutedRed,
+          ),
+        );
       } finally {
         if (mounted) {
           setState(() {
@@ -88,6 +79,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: KapColors.backgroundLight,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.language, color: KapColors.slateDark),
+            tooltip: l10n.languageTooltip,
+            onPressed: () {
+              context.read<LocaleProvider>().toggleLocale();
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

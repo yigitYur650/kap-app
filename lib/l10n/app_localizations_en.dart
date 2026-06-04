@@ -160,4 +160,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get alreadyHaveAccount => 'Already have an account? Log In';
+
+  @override
+  String get languageTooltip => 'Change Language';
 }

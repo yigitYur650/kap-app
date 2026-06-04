@@ -403,6 +403,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Already have an account? Log In'**
   String get alreadyHaveAccount;
+
+  /// No description provided for @languageTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Language'**
+  String get languageTooltip;
 }
 
 class _AppLocalizationsDelegate

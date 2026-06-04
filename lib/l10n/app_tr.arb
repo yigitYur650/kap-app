@@ -49,5 +49,6 @@
   "loginError": "Giriş yapılırken bir hata oluştu",
   "registerError": "Kayıt olunurken bir hata oluştu",
   "dontHaveAccount": "Hesabınız yok mu? Kayıt olun",
-  "alreadyHaveAccount": "Zaten hesabınız var mı? Giriş yapın"
+  "alreadyHaveAccount": "Zaten hesabınız var mı? Giriş yapın",
+  "languageTooltip": "Dili Değiştir"
 }

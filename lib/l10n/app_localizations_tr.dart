@@ -160,4 +160,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get alreadyHaveAccount => 'Zaten hesabınız var mı? Giriş yapın';
+
+  @override
+  String get languageTooltip => 'Dili Değiştir';
 }
