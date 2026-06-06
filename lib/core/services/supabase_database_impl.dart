@@ -92,10 +92,8 @@ class SupabaseDatabaseImpl implements DatabaseService {
         });
   }
 
-  void _emitMappedItems() {
-    if (_itemsController.isClosed) return;
-    
-    final mapped = _lastProducts.map((map) {
+  List<Map<String, dynamic>> _getMappedItems() {
+    return _lastProducts.map((map) {
       final categoryId = map['category_id'] as String?;
       final categoryName = categoryId != null ? (_categoryCache[categoryId] ?? 'Diğer') : 'Diğer';
       
@@ -113,27 +111,33 @@ class SupabaseDatabaseImpl implements DatabaseService {
         'marketAdi': marketName,
       };
     }).toList();
+  }
 
-    _itemsController.add(mapped);
+  void _emitMappedItems() {
+    if (_itemsController.isClosed) return;
+    _itemsController.add(_getMappedItems());
   }
 
   @override
-  Stream<List<Map<String, dynamic>>> getAlinacaklarListesi() {
-    return _itemsController.stream.map((list) {
+  Stream<List<Map<String, dynamic>>> getAlinacaklarListesi() async* {
+    yield _getMappedItems().where((item) => !(item['alindiMi'] as bool? ?? false)).toList();
+    yield* _itemsController.stream.map((list) {
       return list.where((item) => !(item['alindiMi'] as bool? ?? false)).toList();
     });
   }
 
   @override
-  Stream<List<Map<String, dynamic>>> getAlinanlarListesi() {
-    return _itemsController.stream.map((list) {
+  Stream<List<Map<String, dynamic>>> getAlinanlarListesi() async* {
+    yield _getMappedItems().where((item) => item['alindiMi'] as bool? ?? false).toList();
+    yield* _itemsController.stream.map((list) {
       return list.where((item) => item['alindiMi'] as bool? ?? false).toList();
     });
   }
 
   @override
-  Stream<List<Map<String, dynamic>>> getTumUrunler() {
-    return _itemsController.stream;
+  Stream<List<Map<String, dynamic>>> getTumUrunler() async* {
+    yield _getMappedItems();
+    yield* _itemsController.stream;
   }
 
   String? _getCategoryIdByName(String name) {
@@ -276,8 +280,9 @@ class SupabaseDatabaseImpl implements DatabaseService {
   }
 
   @override
-  Stream<List<String>> getMarketler() {
-    return _marketsController.stream;
+  Stream<List<String>> getMarketler() async* {
+    yield _marketCache.values.toList();
+    yield* _marketsController.stream;
   }
 
   @override
@@ -289,8 +294,9 @@ class SupabaseDatabaseImpl implements DatabaseService {
   }
 
   @override
-  Stream<List<Map<String, dynamic>>> getAileUyeleri() {
-    return _familyController.stream;
+  Stream<List<Map<String, dynamic>>> getAileUyeleri() async* {
+    yield List.from(_lastFamilyMembers);
+    yield* _familyController.stream;
   }
 
   @override
