@@ -425,9 +425,20 @@ class _MinimalProductListItemState extends State<_MinimalProductListItem> {
     final bool alindiMi = widget.item['alindiMi'] as bool? ?? false;
 
     String displayName = urunAdi;
-    if (miktar != null && birim != null && birim.isNotEmpty) {
-      final miktarStr = miktar.toString().replaceAll('.0', '');
-      displayName = '$urunAdi ($miktarStr $birim)';
+    String quantityInfo = '';
+    if (miktar != null) {
+      final miktarStr = miktar.toString().replaceAll(RegExp(r'\.0$'), '');
+      if (birim != null && birim.trim().isNotEmpty) {
+        quantityInfo = '$miktarStr $birim';
+      } else {
+        quantityInfo = miktarStr;
+      }
+    } else if (birim != null && birim.trim().isNotEmpty) {
+      quantityInfo = birim;
+    }
+
+    if (quantityInfo.isNotEmpty) {
+      displayName = '$urunAdi · $quantityInfo';
     }
 
     return AnimatedOpacity(

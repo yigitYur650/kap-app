@@ -50,5 +50,9 @@
   "registerError": "Kayıt olunurken bir hata oluştu",
   "dontHaveAccount": "Hesabınız yok mu? Kayıt olun",
   "alreadyHaveAccount": "Zaten hesabınız var mı? Giriş yapın",
-  "languageTooltip": "Dili Değiştir"
+  "languageTooltip": "Dili Değiştir",
+  "productDeleted": "Ürün silindi",
+  "undo": "Geri Al",
+  "deleteTooltip": "Sil",
+  "addProductError": "Ürün eklenirken bir hata oluştu."
 }

@@ -38,4 +38,8 @@ abstract class DatabaseService {
 
   /// Removes a product from the list.
   Future<void> urunSil(String urunId);
+
+  /// Restores a deleted product (undo soft delete).
+  Future<void> urunGeriAl(String urunId);
 }
+

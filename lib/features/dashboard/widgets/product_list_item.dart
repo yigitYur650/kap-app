@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:provider/provider.dart';
+import 'package:kap/l10n/app_localizations.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/services/database_service.dart';
 
@@ -56,9 +57,20 @@ class _ProductListItemState extends State<ProductListItem> {
     final bool alindiMi = widget.item['alindiMi'] as bool? ?? false;
 
     String displayName = urunAdi;
-    if (miktar != null && birim != null && birim.isNotEmpty) {
-      final miktarStr = miktar.toString().replaceAll('.0', '');
-      displayName = '$urunAdi ($miktarStr $birim)';
+    String quantityInfo = '';
+    if (miktar != null) {
+      final miktarStr = miktar.toString().replaceAll(RegExp(r'\.0$'), '');
+      if (birim != null && birim.trim().isNotEmpty) {
+        quantityInfo = '$miktarStr $birim';
+      } else {
+        quantityInfo = miktarStr;
+      }
+    } else if (birim != null && birim.trim().isNotEmpty) {
+      quantityInfo = birim;
+    }
+
+    if (quantityInfo.isNotEmpty) {
+      displayName = '$urunAdi · $quantityInfo';
     }
 
     return AnimatedOpacity(
@@ -76,6 +88,21 @@ class _ProductListItemState extends State<ProductListItem> {
                 direction: DismissDirection.horizontal,
                 onDismissed: (direction) {
                   dbService.urunSil(id);
+                  if (context.mounted) {
+                    final l10n = AppLocalizations.of(context)!;
+                    ShadToaster.of(context).show(
+                      ShadToast(
+                        description: Text(l10n.productDeleted),
+                        action: ShadButton.outline(
+                          size: ShadButtonSize.sm,
+                          onPressed: () {
+                            dbService.urunGeriAl(id);
+                          },
+                          child: Text(l10n.undo),
+                        ),
+                      ),
+                    );
+                  }
                 },
                 background: _buildDismissBackground(isSwipeRight: true),
                 secondaryBackground: _buildDismissBackground(isSwipeRight: false),
@@ -183,6 +210,45 @@ class _ProductListItemState extends State<ProductListItem> {
                             LucideIcons.pencil,
                             size: 18,
                             color: Colors.grey.shade400,
+                          ),
+                        ),
+                      ),
+                      // Zarif Sil (Delete/Trash) ikonu
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () async {
+                          if (id.isNotEmpty && !_isAnimatingOut) {
+                            final toaster = ShadToaster.of(context);
+                            final l10n = AppLocalizations.of(context)!;
+                            setState(() {
+                              _isAnimatingOut = true;
+                            });
+                            // Animasyonun bitmesini bekle
+                            await Future.delayed(const Duration(milliseconds: 250));
+                            dbService.urunSil(id);
+                            toaster.show(
+                              ShadToast(
+                                description: Text(l10n.productDeleted),
+                                action: ShadButton.outline(
+                                  size: ShadButtonSize.sm,
+                                  onPressed: () {
+                                    dbService.urunGeriAl(id);
+                                  },
+                                  child: Text(l10n.undo),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: Tooltip(
+                          message: AppLocalizations.of(context)!.deleteTooltip,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                            child: Icon(
+                              LucideIcons.trash2,
+                              size: 18,
+                              color: Colors.grey.shade400,
+                            ),
                           ),
                         ),
                       ),

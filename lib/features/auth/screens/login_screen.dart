@@ -19,57 +19,76 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   void _submit() async {
+    debugPrint('[LoginScreen] _submit called. Current _isLoading: $_isLoading');
     if (_isLoading) return;
+    
     if (_formKey.currentState!.saveAndValidate()) {
       setState(() {
         _isLoading = true;
       });
-
-      final values = _formKey.currentState!.value;
-      final String email = (values['email'] as String).trim();
-      final String password = values['password'] as String;
-      final String name = _isLogin ? '' : (values['name'] as String).trim();
-
-      final authService = context.read<AuthService>();
-      final l10n = AppLocalizations.of(context)!;
-      final messenger = ScaffoldMessenger.of(context);
-      final successMsg = _isLogin ? l10n.loginSuccess : l10n.registerSuccess;
-      final defaultErrorMsg = _isLogin ? l10n.loginError : l10n.registerError;
+      debugPrint('[LoginScreen] _submit: Form validated successfully. Set _isLoading to true.');
 
       try {
+        final values = _formKey.currentState!.value;
+        debugPrint('[LoginScreen] _submit: Form values: $values');
+
+        final String email = (values['email'] as String? ?? '').trim();
+        final String password = values['password'] as String? ?? '';
+        final String name = _isLogin ? '' : (values['name'] as String? ?? '').trim();
+
+        debugPrint('[LoginScreen] _submit: Retrieving AuthService from context.');
+        final authService = context.read<AuthService>();
+        final l10n = AppLocalizations.of(context)!;
+        final successMsg = _isLogin ? l10n.loginSuccess : l10n.registerSuccess;
+
+        debugPrint('[LoginScreen] _submit: Initiating auth operation. _isLogin: $_isLogin, email: $email');
         if (_isLogin) {
           await authService.signInWithEmail(email: email, password: password);
         } else {
           await authService.signUpWithEmail(email: email, password: password, name: name);
         }
+        debugPrint('[LoginScreen] _submit: Auth operation completed successfully.');
 
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(successMsg),
-            backgroundColor: KapColors.slateDark,
-          ),
-        );
+        if (mounted) {
+          ShadToaster.of(context).show(
+            ShadToast(
+              description: Text(successMsg),
+            ),
+          );
+        }
       } on AuthException catch (e) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: KapColors.mutedRed,
-          ),
-        );
+        debugPrint('[LoginScreen] _submit: Caught AuthException: ${e.message}');
+        if (mounted) {
+          ShadToaster.of(context).show(
+            ShadToast.destructive(
+              description: Text(e.message),
+            ),
+          );
+        }
       } catch (e) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(defaultErrorMsg),
-            backgroundColor: KapColors.mutedRed,
-          ),
-        );
+        debugPrint('[LoginScreen] _submit: Caught unexpected error: $e');
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          final defaultErrorMsg = _isLogin 
+              ? (l10n?.loginError ?? 'Giriş yapılamadı.') 
+              : (l10n?.registerError ?? 'Kayıt olunamadı.');
+          ShadToaster.of(context).show(
+            ShadToast.destructive(
+              description: Text(defaultErrorMsg),
+            ),
+          );
+        }
       } finally {
+        debugPrint('[LoginScreen] _submit: inside finally block. mounted: $mounted');
         if (mounted) {
           setState(() {
             _isLoading = false;
           });
+          debugPrint('[LoginScreen] _submit: finally block - set _isLoading = false completed.');
         }
       }
+    } else {
+      debugPrint('[LoginScreen] _submit: Form validation failed.');
     }
   }
 

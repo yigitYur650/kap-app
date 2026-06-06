@@ -163,4 +163,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get languageTooltip => 'Dili Değiştir';
+
+  @override
+  String get productDeleted => 'Ürün silindi';
+
+  @override
+  String get undo => 'Geri Al';
+
+  @override
+  String get deleteTooltip => 'Sil';
+
+  @override
+  String get addProductError => 'Ürün eklenirken bir hata oluştu.';
 }

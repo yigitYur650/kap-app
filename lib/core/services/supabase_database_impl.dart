@@ -182,6 +182,7 @@ class SupabaseDatabaseImpl implements DatabaseService {
       });
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl urunEkle Hata: $e');
+      rethrow;
     }
   }
 
@@ -245,6 +246,18 @@ class SupabaseDatabaseImpl implements DatabaseService {
           .eq('id', urunId);
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl urunSil Hata: $e');
+    }
+  }
+
+  @override
+  Future<void> urunGeriAl(String urunId) async {
+    try {
+      await _supabase
+          .from('products')
+          .update({'is_deleted': false})
+          .eq('id', urunId);
+    } catch (e) {
+      debugPrint('SupabaseDatabaseImpl urunGeriAl Hata: $e');
     }
   }
 }

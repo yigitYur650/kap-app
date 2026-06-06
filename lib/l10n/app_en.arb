@@ -50,5 +50,9 @@
   "registerError": "An error occurred during registration",
   "dontHaveAccount": "Don't have an account? Sign Up",
   "alreadyHaveAccount": "Already have an account? Log In",
-  "languageTooltip": "Change Language"
+  "languageTooltip": "Change Language",
+  "productDeleted": "Product deleted",
+  "undo": "Undo",
+  "deleteTooltip": "Delete",
+  "addProductError": "An error occurred while adding the product."
 }

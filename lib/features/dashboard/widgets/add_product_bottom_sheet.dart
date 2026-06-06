@@ -339,16 +339,27 @@ class _AddProductBottomSheetState extends State<AddProductBottomSheet> {
                                   ? double.tryParse(qtyRaw)
                                   : null;
 
-                              await dbService.urunEkle(
-                                urunAdi: name,
-                                fiyat: price,
-                                marketAdi: market,
-                                kategori: _selectedCategory,
-                                miktar: miktar,
-                                birim: _selectedUnit,
-                              );
-                              if (context.mounted) {
-                                Navigator.pop(context);
+                              try {
+                                await dbService.urunEkle(
+                                  urunAdi: name,
+                                  fiyat: price,
+                                  marketAdi: market,
+                                  kategori: _selectedCategory,
+                                  miktar: miktar,
+                                  birim: _selectedUnit,
+                                );
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ShadToaster.of(context).show(
+                                    ShadToast.destructive(
+                                      title: Text(l10n.addProductError),
+                                      description: Text(e.toString()),
+                                    ),
+                                  );
+                                }
                               }
                             }
                           },

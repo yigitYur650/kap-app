@@ -163,4 +163,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageTooltip => 'Change Language';
+
+  @override
+  String get productDeleted => 'Product deleted';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get deleteTooltip => 'Delete';
+
+  @override
+  String get addProductError => 'An error occurred while adding the product.';
 }

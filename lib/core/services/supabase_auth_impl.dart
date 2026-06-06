@@ -61,7 +61,7 @@ class SupabaseAuthImpl implements AuthService {
         await _supabase.from('family_members').upsert({
           'id': user.id,
           'name': name.trim(),
-        }).timeout(const Duration(seconds: 10));
+        }).timeout(const Duration(seconds: 15));
       }
     } on supabase.AuthException catch (e, stackTrace) {
       _logException('signUpWithEmail', e, stackTrace);
@@ -87,7 +87,7 @@ class SupabaseAuthImpl implements AuthService {
   @override
   Future<void> signOut() async {
     try {
-      await _supabase.auth.signOut().timeout(const Duration(seconds: 10));
+      await _supabase.auth.signOut().timeout(const Duration(seconds: 15));
     } catch (e, stackTrace) {
       _logException('signOut', e, stackTrace);
       throw UnknownAuthException('Çıkış yapılamadı.', originalError: e, stackTrace: stackTrace);

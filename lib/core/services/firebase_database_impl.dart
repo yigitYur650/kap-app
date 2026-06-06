@@ -203,4 +203,13 @@ class FirebaseDatabaseImpl implements DatabaseService {
       _streamController.add(List.from(_items));
     }
   }
+
+  @override
+  Future<void> urunGeriAl(String urunId) async {
+    final index = _items.indexWhere((element) => element['id'] == urunId);
+    if (index != -1) {
+      _items[index]['is_deleted'] = false;
+      _streamController.add(List.from(_items));
+    }
+  }
 }
