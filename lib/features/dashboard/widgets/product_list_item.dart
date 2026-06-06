@@ -86,8 +86,23 @@ class _ProductListItemState extends State<ProductListItem> {
             : Dismissible(
                 key: ValueKey(id),
                 direction: DismissDirection.horizontal,
+                confirmDismiss: (direction) async {
+                  try {
+                    await dbService.urunSil(id);
+                    return true;
+                  } catch (e) {
+                    if (context.mounted) {
+                      ShadToaster.of(context).show(
+                        ShadToast.destructive(
+                          title: const Text("Hata"),
+                          description: const Text("Silme işlemi başarısız oldu"),
+                        ),
+                      );
+                    }
+                    return false;
+                  }
+                },
                 onDismissed: (direction) {
-                  dbService.urunSil(id);
                   if (context.mounted) {
                     final l10n = AppLocalizations.of(context)!;
                     ShadToaster.of(context).show(
@@ -95,8 +110,19 @@ class _ProductListItemState extends State<ProductListItem> {
                         description: Text(l10n.productDeleted),
                         action: ShadButton.outline(
                           size: ShadButtonSize.sm,
-                          onPressed: () {
-                            dbService.urunGeriAl(id);
+                          onPressed: () async {
+                            try {
+                              await dbService.urunGeriAl(id);
+                            } catch (e) {
+                              if (context.mounted) {
+                                ShadToaster.of(context).show(
+                                  ShadToast.destructive(
+                                    title: const Text("Hata"),
+                                    description: const Text("Geri alma işlemi başarısız oldu"),
+                                  ),
+                                );
+                              }
+                            }
                           },
                           child: Text(l10n.undo),
                         ),
@@ -220,24 +246,54 @@ class _ProductListItemState extends State<ProductListItem> {
                           if (id.isNotEmpty && !_isAnimatingOut) {
                             final toaster = ShadToaster.of(context);
                             final l10n = AppLocalizations.of(context)!;
-                            setState(() {
-                              _isAnimatingOut = true;
-                            });
-                            // Animasyonun bitmesini bekle
-                            await Future.delayed(const Duration(milliseconds: 250));
-                            dbService.urunSil(id);
-                            toaster.show(
-                              ShadToast(
-                                description: Text(l10n.productDeleted),
-                                action: ShadButton.outline(
-                                  size: ShadButtonSize.sm,
-                                  onPressed: () {
-                                    dbService.urunGeriAl(id);
-                                  },
-                                  child: Text(l10n.undo),
-                                ),
-                              ),
-                            );
+                            
+                            try {
+                              setState(() {
+                                _isAnimatingOut = true;
+                              });
+                              // Animasyonun bitmesini bekle
+                              await Future.delayed(const Duration(milliseconds: 250));
+                              await dbService.urunSil(id);
+                              
+                              if (context.mounted) {
+                                toaster.show(
+                                  ShadToast(
+                                    description: Text(l10n.productDeleted),
+                                    action: ShadButton.outline(
+                                      size: ShadButtonSize.sm,
+                                      onPressed: () async {
+                                        try {
+                                          await dbService.urunGeriAl(id);
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ShadToaster.of(context).show(
+                                              ShadToast.destructive(
+                                                title: const Text("Hata"),
+                                                description: const Text("Geri alma işlemi başarısız oldu"),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                      child: Text(l10n.undo),
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              // Hata durumunda animasyonu geri al
+                              setState(() {
+                                _isAnimatingOut = false;
+                              });
+                              if (context.mounted) {
+                                toaster.show(
+                                  ShadToast.destructive(
+                                    title: const Text("Hata"),
+                                    description: const Text("Silme işlemi başarısız oldu"),
+                                  ),
+                                );
+                              }
+                            }
                           }
                         },
                         child: Tooltip(

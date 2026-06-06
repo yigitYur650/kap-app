@@ -276,6 +276,7 @@ class SupabaseDatabaseImpl implements DatabaseService {
           .timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl urunDurumGuncelle Hata: $e');
+      rethrow;
     }
   }
 
@@ -307,6 +308,7 @@ class SupabaseDatabaseImpl implements DatabaseService {
       }).timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl aileUyesiEkle Hata: $e');
+      rethrow;
     }
   }
 
@@ -320,6 +322,7 @@ class SupabaseDatabaseImpl implements DatabaseService {
           .timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl urunSil Hata: $e');
+      rethrow;
     }
   }
 
@@ -333,6 +336,7 @@ class SupabaseDatabaseImpl implements DatabaseService {
           .timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl urunGeriAl Hata: $e');
+      rethrow;
     }
   }
 }
