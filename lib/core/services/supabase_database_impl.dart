@@ -6,11 +6,11 @@ import 'database_service.dart';
 class SupabaseDatabaseImpl implements DatabaseService {
   final _supabase = Supabase.instance.client;
   final Map<String, String> _categoryCache = {};
+  final Map<String, String> _marketCache = {};
   
   final _itemsController = StreamController<List<Map<String, dynamic>>>.broadcast();
   List<Map<String, dynamic>> _lastProducts = [];
 
-  final List<String> _markets = ['Migros', 'Şok', 'BİM', 'A101', 'Fırın'];
   final _marketsController = StreamController<List<String>>.broadcast();
 
   final _familyController = StreamController<List<Map<String, dynamic>>>.broadcast();
@@ -18,12 +18,6 @@ class SupabaseDatabaseImpl implements DatabaseService {
 
   SupabaseDatabaseImpl() {
     _initRealtimeListeners();
-    
-    Timer.run(() {
-      if (!_marketsController.isClosed) {
-        _marketsController.add(List.from(_markets));
-      }
-    });
   }
 
   void _emitFamilyMembers() {
@@ -48,7 +42,26 @@ class SupabaseDatabaseImpl implements DatabaseService {
           debugPrint('Supabase categories stream error: $err');
         });
 
-    // 2. Products Stream Listener
+    // 2. Markets Stream Listener
+    _supabase
+        .from('markets')
+        .stream(primaryKey: ['id'])
+        .listen((marketsData) {
+          _marketCache.clear();
+          for (var row in marketsData) {
+            final id = row['id'] as String;
+            final name = row['name'] as String;
+            _marketCache[id] = name;
+          }
+          if (!_marketsController.isClosed) {
+            _marketsController.add(_marketCache.values.toList());
+          }
+          _emitMappedItems();
+        }, onError: (err) {
+          debugPrint('Supabase markets stream error: $err');
+        });
+
+    // 3. Products Stream Listener
     _supabase
         .from('products')
         .stream(primaryKey: ['id'])
@@ -61,7 +74,7 @@ class SupabaseDatabaseImpl implements DatabaseService {
           debugPrint('Supabase products stream error: $err');
         });
 
-    // 3. Family Members Stream Listener
+    // 4. Family Members Stream Listener
     _supabase
         .from('family_members')
         .stream(primaryKey: ['id'])
@@ -86,6 +99,9 @@ class SupabaseDatabaseImpl implements DatabaseService {
       final categoryId = map['category_id'] as String?;
       final categoryName = categoryId != null ? (_categoryCache[categoryId] ?? 'Diğer') : 'Diğer';
       
+      final marketId = map['market_id'] as String?;
+      final marketName = marketId != null ? _marketCache[marketId] : null;
+      
       return {
         'id': map['id'],
         'urunAdi': map['name'],
@@ -94,7 +110,7 @@ class SupabaseDatabaseImpl implements DatabaseService {
         'kategori': categoryName,
         'miktar': map['quantity'] != null ? (map['quantity'] as num).toDouble() : null,
         'birim': map['unit'],
-        'marketAdi': null, // markets table isn't in database, default null
+        'marketAdi': marketName,
       };
     }).toList();
 
@@ -103,7 +119,6 @@ class SupabaseDatabaseImpl implements DatabaseService {
 
   @override
   Stream<List<Map<String, dynamic>>> getAlinacaklarListesi() {
-    Timer.run(() => _emitMappedItems());
     return _itemsController.stream.map((list) {
       return list.where((item) => !(item['alindiMi'] as bool? ?? false)).toList();
     });
@@ -111,7 +126,6 @@ class SupabaseDatabaseImpl implements DatabaseService {
 
   @override
   Stream<List<Map<String, dynamic>>> getAlinanlarListesi() {
-    Timer.run(() => _emitMappedItems());
     return _itemsController.stream.map((list) {
       return list.where((item) => item['alindiMi'] as bool? ?? false).toList();
     });
@@ -119,7 +133,6 @@ class SupabaseDatabaseImpl implements DatabaseService {
 
   @override
   Stream<List<Map<String, dynamic>>> getTumUrunler() {
-    Timer.run(() => _emitMappedItems());
     return _itemsController.stream;
   }
 
@@ -166,6 +179,47 @@ class SupabaseDatabaseImpl implements DatabaseService {
     }
   }
 
+  String? _getMarketIdByName(String name) {
+    for (var entry in _marketCache.entries) {
+      if (entry.value.toLowerCase() == name.toLowerCase()) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
+  Future<String> _getOrCreateMarketId(String marketName) async {
+    final existingId = _getMarketIdByName(marketName);
+    if (existingId != null) return existingId;
+
+    try {
+      final response = await _supabase
+          .from('markets')
+          .insert({'name': marketName})
+          .select('id')
+          .single()
+          .timeout(const Duration(seconds: 10));
+      return response['id'] as String;
+    } catch (e) {
+      debugPrint('Market insert hatası, select deneniyor: $e');
+      try {
+        final res = await _supabase
+            .from('markets')
+            .select('id')
+            .eq('name', marketName)
+            .maybeSingle()
+            .timeout(const Duration(seconds: 10));
+            
+        if (res != null) {
+          return res['id'] as String;
+        }
+        throw Exception('Market bulunamadı ve oluşturulamadı. RLS kuralını kontrol edin.');
+      } catch (innerErr) {
+        throw Exception('Market işlemi zaman aşımına uğradı veya reddedildi: $innerErr');
+      }
+    }
+  }
+
   @override
   Future<void> urunEkle({
     required String urunAdi,
@@ -181,14 +235,21 @@ class SupabaseDatabaseImpl implements DatabaseService {
         categoryId = await _getOrCreateCategoryId(kategori);
       }
 
-      // Timeout eklendi
+      String? marketId;
+      if (marketAdi != null && marketAdi.isNotEmpty) {
+        marketId = await _getOrCreateMarketId(marketAdi);
+      }
+
+      // Timeout ve is_deleted eklendi
       await _supabase.from('products').insert({
         'name': urunAdi,
         'price': fiyat,
         'category_id': categoryId,
+        'market_id': marketId,
         'quantity': miktar ?? 1.0,
         'unit': birim,
         'is_bought': false,
+        'is_deleted': false,
         'created_by': _supabase.auth.currentUser?.id,
       }).timeout(const Duration(seconds: 10));
       
@@ -207,7 +268,8 @@ class SupabaseDatabaseImpl implements DatabaseService {
       await _supabase
           .from('products')
           .update({'is_bought': alindiMi})
-          .eq('id', urunId);
+          .eq('id', urunId)
+          .timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl urunDurumGuncelle Hata: $e');
     }
@@ -215,26 +277,19 @@ class SupabaseDatabaseImpl implements DatabaseService {
 
   @override
   Stream<List<String>> getMarketler() {
-    Timer.run(() {
-      if (!_marketsController.isClosed) {
-        _marketsController.add(List.from(_markets));
-      }
-    });
     return _marketsController.stream;
   }
 
   @override
   Future<void> marketEkle(String marketAdi) async {
     final cleanName = marketAdi.trim();
-    if (cleanName.isNotEmpty && !_markets.contains(cleanName)) {
-      _markets.add(cleanName);
-      _marketsController.add(List.from(_markets));
+    if (cleanName.isNotEmpty) {
+      await _getOrCreateMarketId(cleanName);
     }
   }
 
   @override
   Stream<List<Map<String, dynamic>>> getAileUyeleri() {
-    Timer.run(() => _emitFamilyMembers());
     return _familyController.stream;
   }
 
@@ -243,7 +298,7 @@ class SupabaseDatabaseImpl implements DatabaseService {
     try {
       await _supabase.from('family_members').insert({
         'name': isim,
-      });
+      }).timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl aileUyesiEkle Hata: $e');
     }
@@ -255,7 +310,8 @@ class SupabaseDatabaseImpl implements DatabaseService {
       await _supabase
           .from('products')
           .update({'is_deleted': true})
-          .eq('id', urunId);
+          .eq('id', urunId)
+          .timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl urunSil Hata: $e');
     }
@@ -267,7 +323,8 @@ class SupabaseDatabaseImpl implements DatabaseService {
       await _supabase
           .from('products')
           .update({'is_deleted': false})
-          .eq('id', urunId);
+          .eq('id', urunId)
+          .timeout(const Duration(seconds: 10));
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl urunGeriAl Hata: $e');
     }
