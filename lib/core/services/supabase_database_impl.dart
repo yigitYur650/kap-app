@@ -137,22 +137,32 @@ class SupabaseDatabaseImpl implements DatabaseService {
     if (existingId != null) return existingId;
 
     try {
+      // Timeout eklendi
       final response = await _supabase
           .from('categories')
           .insert({'name': categoryName})
           .select('id')
-          .single();
+          .single()
+          .timeout(const Duration(seconds: 10)); 
       return response['id'] as String;
     } catch (e) {
-      final res = await _supabase
-          .from('categories')
-          .select('id')
-          .eq('name', categoryName)
-          .maybeSingle();
-      if (res != null) {
-        return res['id'] as String;
+      debugPrint('Kategori insert hatası, select deneniyor: $e');
+      try {
+        // Timeout eklendi
+        final res = await _supabase
+            .from('categories')
+            .select('id')
+            .eq('name', categoryName)
+            .maybeSingle()
+            .timeout(const Duration(seconds: 10));
+            
+        if (res != null) {
+          return res['id'] as String;
+        }
+        throw Exception('Kategori bulunamadı ve oluşturulamadı. RLS kuralını kontrol edin.');
+      } catch (innerErr) {
+        throw Exception('Kategori işlemi zaman aşımına uğradı veya reddedildi: $innerErr');
       }
-      throw Exception('Kategori oluşturulamadı.');
     }
   }
 
@@ -171,6 +181,7 @@ class SupabaseDatabaseImpl implements DatabaseService {
         categoryId = await _getOrCreateCategoryId(kategori);
       }
 
+      // Timeout eklendi
       await _supabase.from('products').insert({
         'name': urunAdi,
         'price': fiyat,
@@ -179,10 +190,11 @@ class SupabaseDatabaseImpl implements DatabaseService {
         'unit': birim,
         'is_bought': false,
         'created_by': _supabase.auth.currentUser?.id,
-      });
+      }).timeout(const Duration(seconds: 10));
+      
     } catch (e) {
       debugPrint('SupabaseDatabaseImpl urunEkle Hata: $e');
-      rethrow;
+      rethrow; // Bu rethrow sayesinde hatayı UI yakalayıp ekrana basacak!
     }
   }
 
